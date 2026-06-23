@@ -12,65 +12,102 @@
     <style>
         /* Compatibilidad Cross-Browser para impresión */
         @media print {
-            @page { margin: 20mm; size: letter; }
+            @page { margin: 15mm; size: letter; }
             body { 
                 background-color: white !important; 
-                -webkit-print-color-adjust: exact; /* Chrome/Safari */
-                print-color-adjust: exact; /* Estándar moderno */
-                color-adjust: exact; /* Firefox antiguo */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color-adjust: exact;
             }
             .print-bg-light { background-color: #f3f4f6 !important; color: black !important; }
             .print-text-dark { color: black !important; }
             .print\:hidden { display: none !important; }
+            
+            /* Configuraciones de la marca de agua */
+            .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                opacity: 0.15; 
+                z-index: -1;
+                max-width: 95%;
+            }
+            .print-content-wrapper {
+                position: relative;
+                z-index: 10;
+            }
         }
 
-        /* Compatibilidad Cross-Browser para Scrollbars */
-        /* Estándar (Firefox) */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #334155 #0f172a;
-        }
-        /* WebKit (Chrome, Edge, Safari) */
+        /* Scrollbars */
+        * { scrollbar-width: thin; scrollbar-color: #334155 #0f172a; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
         
-        /* Ajuste para inputs de rango (Sliders) en distintos navegadores */
-        input[type=range] {
-            -webkit-appearance: none; /* Elimina estilos por defecto de Safari/Chrome */
-            background: transparent;
+        /* Ocultar flechas en los input number (Chrome, Safari, Edge, Opera) */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
-        input[type=range]::-webkit-slider-runnable-track {
-            background: #334155;
-            border-radius: 4px;
-            height: 6px;
+        /* Ocultar flechas en Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
         }
-        input[type=range]::-moz-range-track {
-            background: #334155;
-            border-radius: 4px;
-            height: 6px;
-        }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { background: #334155; border-radius: 4px; height: 6px; }
+        input[type=range]::-moz-range-track { background: #334155; border-radius: 4px; height: 6px; }
     </style>
 </head>
 <body class="bg-slate-950 font-sans text-slate-200 min-h-screen relative overflow-x-hidden">
     
     <div id="main-dashboard" class="p-4 md:p-8 max-w-[1400px] mx-auto print:hidden">
-        <header class="mb-6 md:mb-8 border-b border-slate-700 pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <div>
-                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-slate-100 tracking-tight leading-tight">
-                    Modelo de Evaluación de probabilidad de éxito de COA <span class="text-blue-500 text-lg md:text-xl font-bold align-top ml-1">v2.0</span>
-                </h1>
-                <p class="text-slate-400 text-xs md:text-sm mt-1 font-semibold tracking-wide">(Basado en DAM 1.5 Planeamiento Naval Operacional)</p>
-            </div>
-            <div class="text-left md:text-right w-full md:w-auto">
-                <span class="inline-block bg-blue-900/50 text-blue-300 py-1 px-3 rounded text-xs font-mono border border-blue-800 break-words">
-                    OP-ACTIVA: GOLFO-26 // COA: ALFA
-                </span>
-            </div>
+        
+        <header class="mb-6 border-b border-slate-700 pb-4">
+            <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-slate-100 tracking-tight leading-tight">
+                Modelo de Evaluación de probabilidad de éxito de COA <span class="text-blue-500 text-lg md:text-xl font-bold align-top ml-1">v2.6</span>
+            </h1>
+            <p class="text-slate-400 text-xs md:text-sm mt-1 font-semibold tracking-wide">(Basado en DAM 1.5 Planeamiento Naval Operacional)</p>
         </header>
 
+        <section class="bg-slate-900 border border-slate-800 rounded-lg p-4 md:p-5 mb-6 shadow-lg">
+            <h2 class="text-sm md:text-base font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2">
+                Datos de Identificación del COA
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 mb-1">Operación Activa</label>
+                            <input type="text" id="input-operacion" placeholder="Ej. GOLFO-26" class="w-full bg-slate-800 border border-slate-700 text-sm text-white rounded p-2 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 mb-1">Identificador COA</label>
+                            <input type="text" id="input-coa" placeholder="Ej. ALFA / 1" class="w-full bg-slate-800 border border-slate-700 text-sm text-white rounded p-2 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 mb-1">Fuerza / Equipo Evaluado</label>
+                            <input type="text" id="input-unidad" placeholder="Ej. Equipo 1" class="w-full bg-slate-800 border border-slate-700 text-sm text-white rounded p-2 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 mb-1 text-emerald-400">Evaluador / Analista</label>
+                            <input type="text" id="input-evaluador" placeholder="Grado y Nombre..." class="w-full bg-slate-800 border border-slate-700 text-sm text-white rounded p-2 focus:outline-none focus:border-emerald-500 transition-colors">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-400 mb-1">Misión / Objetivo Final</label>
+                    <textarea id="input-mision" rows="4" placeholder="Ej. Red vs Blue / Describa el objetivo principal..." class="w-full h-[calc(100%-1.25rem)] bg-slate-800 border border-slate-700 text-sm text-white rounded p-2 focus:outline-none focus:border-blue-500 transition-colors resize-none"></textarea>
+                </div>
+            </div>
+        </section>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
-            
             <div class="xl:col-span-5 space-y-6">
                 <section class="bg-slate-900 border border-slate-800 rounded-lg p-4 md:p-5 relative shadow-lg overflow-hidden">
                     <h2 class="text-base md:text-lg font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2 flex justify-between items-center">
@@ -78,11 +115,11 @@
                         <span id="gateway1-badge" class="text-xs px-2 py-1 rounded font-bold bg-emerald-900 text-emerald-200">VÁLIDO</span>
                     </h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Adecuado</label><select id="suitability" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Factible</label><select id="feasibility" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Aceptable</label><select id="acceptability" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Diferenciable</label><select id="distinguishable" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Completo</label><select id="completeness" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Adecuado</label><select id="suitability" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Factible</label><select id="feasibility" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Aceptable</label><select id="acceptability" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Diferenciable</label><select id="distinguishable" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Completo</label><select id="completeness" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
                     </div>
                 </section>
 
@@ -96,15 +133,42 @@
                     </h2>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Misión (20%)</span> <span id="val-mision">85</span></label><input type="range" id="mision" min="0" max="100" value="85" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Factibilidad Op. (15%)</span> <span id="val-fact_op">80</span></label><input type="range" id="fact_op" min="0" max="100" value="80" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>ECOA Probable (10%)</span> <span id="val-ecoa_prob_mcda">75</span></label><input type="range" id="ecoa_prob_mcda" min="0" max="100" value="75" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>ECOA Peligroso (10%)</span> <span id="val-ecoa_pel_mcda">65</span></label><input type="range" id="ecoa_pel_mcda" min="0" max="100" value="65" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Riesgo Operacional (10%)</span> <span id="val-riesgo_op">80</span></label><input type="range" id="riesgo_op" min="0" max="100" value="80" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Riesgo de Misión (10%)</span> <span id="val-riesgo_m">85</span></label><input type="range" id="riesgo_m" min="0" max="100" value="85" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Logística (10%)</span> <span id="val-logistica">70</span></label><input type="range" id="logistica" min="0" max="100" value="70" class="w-full accent-indigo-500 metric-input"></div>
-                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Flexibilidad (5%)</span> <span id="val-flex">75</span></label><input type="range" id="flex" min="0" max="100" value="75" class="w-full accent-indigo-500 metric-input"></div>
-                        <div class="sm:col-span-2"><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>C2 / Interoperabilidad (10%)</span> <span id="val-c2">90</span></label><input type="range" id="c2" min="0" max="100" value="90" class="w-full accent-indigo-500 metric-input"></div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Misión (20%)</span> <input type="number" id="num-mision" data-target="mision" min="0" max="100" value="85" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="mision" min="0" max="100" value="85" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Factibilidad Op. (15%)</span> <input type="number" id="num-fact_op" data-target="fact_op" min="0" max="100" value="80" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="fact_op" min="0" max="100" value="80" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>ECOA Probable (10%)</span> <input type="number" id="num-ecoa_prob_mcda" data-target="ecoa_prob_mcda" min="0" max="100" value="75" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="ecoa_prob_mcda" min="0" max="100" value="75" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>ECOA Peligroso (10%)</span> <input type="number" id="num-ecoa_pel_mcda" data-target="ecoa_pel_mcda" min="0" max="100" value="65" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="ecoa_pel_mcda" min="0" max="100" value="65" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Riesgo Operacional (10%)</span> <input type="number" id="num-riesgo_op" data-target="riesgo_op" min="0" max="100" value="80" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="riesgo_op" min="0" max="100" value="80" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Riesgo de Misión (10%)</span> <input type="number" id="num-riesgo_m" data-target="riesgo_m" min="0" max="100" value="85" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="riesgo_m" min="0" max="100" value="85" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Logística (10%)</span> <input type="number" id="num-logistica" data-target="logistica" min="0" max="100" value="70" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="logistica" min="0" max="100" value="70" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Flexibilidad (5%)</span> <input type="number" id="num-flex" data-target="flex" min="0" max="100" value="75" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="flex" min="0" max="100" value="75" class="w-full accent-indigo-500 metric-input">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>C2 / Interoperabilidad (10%)</span> <input type="number" id="num-c2" data-target="c2" min="0" max="100" value="90" class="w-12 bg-slate-800 border border-slate-600 rounded text-center text-white text-[11px] font-mono sync-input focus:border-blue-500 outline-none"></label>
+                            <input type="range" id="c2" min="0" max="100" value="90" class="w-full accent-indigo-500 metric-input">
+                        </div>
                     </div>
 
                     <div class="mt-6 pt-4 border-t border-slate-800 relative w-full flex justify-center" style="height: 220px;">
@@ -122,13 +186,43 @@
                     
                     <div class="mb-4 p-3 bg-slate-800/50 rounded border border-slate-700 space-y-3">
                         <h3 class="text-[10px] font-bold text-purple-400 uppercase border-b border-slate-700 pb-1 mb-2 tracking-wider">ECOA Más Probable</h3>
-                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Probabilidad (P_EMP)</span> <span id="val-p_emp" class="font-bold text-purple-400">65%</span></label><input type="range" id="p_emp" min="0" max="100" value="65" class="w-full accent-purple-500 metric-input"></div>
-                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Efectividad (E_EMP)</span> <span id="val-e_emp" class="font-bold text-purple-400">80</span></label><input type="range" id="e_emp" min="0" max="100" value="80" class="w-full accent-purple-500 metric-input"></div>
+                        <div>
+                            <label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between items-center">
+                                <span>Probabilidad (P_EMP)</span> 
+                                <div class="flex items-center gap-1">
+                                    <input type="number" id="num-p_emp" data-target="p_emp" min="0" max="100" value="65" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-purple-400 font-bold text-[10px] sync-input focus:border-purple-500 outline-none">
+                                    <span class="text-purple-400 font-bold">%</span>
+                                </div>
+                            </label>
+                            <input type="range" id="p_emp" min="0" max="100" value="65" class="w-full accent-purple-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between items-center">
+                                <span>Efectividad (E_EMP)</span> 
+                                <input type="number" id="num-e_emp" data-target="e_emp" min="0" max="100" value="80" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-purple-400 font-bold text-[10px] sync-input focus:border-purple-500 outline-none">
+                            </label>
+                            <input type="range" id="e_emp" min="0" max="100" value="80" class="w-full accent-purple-500 metric-input">
+                        </div>
                     </div>
                     <div class="p-3 bg-slate-800/50 rounded border border-slate-700 space-y-3 mb-4">
                         <h3 class="text-[10px] font-bold text-red-400 uppercase border-b border-slate-700 pb-1 mb-2 tracking-wider">ECOA Más Peligroso</h3>
-                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Probabilidad (P_EMD)</span> <span id="val-p_emd" class="font-bold text-red-400">35%</span></label><input type="range" id="p_emd" min="0" max="100" value="35" class="w-full accent-red-500 metric-input"></div>
-                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Efectividad (E_EMD)</span> <span id="val-e_emd" class="font-bold text-red-400">55</span></label><input type="range" id="e_emd" min="0" max="100" value="55" class="w-full accent-red-500 metric-input"></div>
+                        <div>
+                            <label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between items-center">
+                                <span>Probabilidad (P_EMD)</span> 
+                                <div class="flex items-center gap-1">
+                                    <input type="number" id="num-p_emd" data-target="p_emd" min="0" max="100" value="35" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-red-400 font-bold text-[10px] sync-input focus:border-red-500 outline-none">
+                                    <span class="text-red-400 font-bold">%</span>
+                                </div>
+                            </label>
+                            <input type="range" id="p_emd" min="0" max="100" value="35" class="w-full accent-red-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between items-center">
+                                <span>Efectividad (E_EMD)</span> 
+                                <input type="number" id="num-e_emd" data-target="e_emd" min="0" max="100" value="55" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-red-400 font-bold text-[10px] sync-input focus:border-red-500 outline-none">
+                            </label>
+                            <input type="range" id="e_emd" min="0" max="100" value="55" class="w-full accent-red-500 metric-input">
+                        </div>
                     </div>
 
                     <div class="w-full relative" style="height: 180px;">
@@ -142,21 +236,25 @@
                         <span id="risk-badge" class="text-[10px] px-2 py-1 rounded font-bold bg-orange-900 text-orange-200">ALTO</span>
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1 flex justify-between"><span>Prob. (1-5)</span> <span id="val-probability">3</span></label><input type="range" id="probability" min="1" max="5" step="1" value="3" class="w-full accent-amber-500 metric-input"></div>
-                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1 flex justify-between"><span>Impacto (1-5)</span> <span id="val-impact">4</span></label><input type="range" id="impact" min="1" max="5" step="1" value="4" class="w-full accent-amber-500 metric-input"></div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Prob. (1-5)</span> <input type="number" id="num-probability" data-target="probability" min="1" max="5" value="3" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-amber-500 font-bold text-[10px] sync-input focus:border-amber-500 outline-none"></label>
+                            <input type="range" id="probability" min="1" max="5" step="1" value="3" class="w-full accent-amber-500 metric-input">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 mb-1 flex justify-between items-center"><span>Impacto (1-5)</span> <input type="number" id="num-impact" data-target="impact" min="1" max="5" value="4" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-amber-500 font-bold text-[10px] sync-input focus:border-amber-500 outline-none"></label>
+                            <input type="range" id="impact" min="1" max="5" step="1" value="4" class="w-full accent-amber-500 metric-input">
+                        </div>
                     </div>
                 </section>
             </div>
 
             <div class="xl:col-span-3 space-y-6 flex flex-col h-full">
-                
                 <section class="bg-slate-900 border border-slate-700 rounded-lg p-6 flex flex-col items-center justify-center shadow-lg relative overflow-hidden">
                     <h2 id="score-title" class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4 text-center">Probabilidad Estimada<br>de Éxito</h2>
                     <div id="score-display" class="text-5xl md:text-6xl font-bold font-mono tracking-tighter text-yellow-500 drop-shadow-md text-center relative z-10">
                         --<span class="text-2xl md:text-3xl">%</span>
                     </div>
                     <div class="absolute w-32 h-32 rounded-full border-4 border-slate-800 opacity-50 z-0"></div>
-                    
                     <div class="w-full bg-slate-800 rounded-full h-2 mt-6 z-10">
                         <div id="score-bar" class="h-2 rounded-full bg-yellow-500 transition-all duration-500" style="width: 0%"></div>
                     </div>
@@ -164,8 +262,7 @@
 
                 <section id="panel-recomendacion" class="bg-slate-800 border-l-4 border-blue-500 rounded-r-lg p-4 md:p-5 shadow-lg transition-all duration-300 flex-grow">
                     <h3 id="rec-title" class="text-xs font-bold text-white mb-3 uppercase tracking-wider border-b border-slate-700 pb-2">Dictamen de Mando</h3>
-                    <div id="rec-content" class="text-xs text-slate-300 space-y-3 leading-relaxed">
-                        </div>
+                    <div id="rec-content" class="text-xs text-slate-300 space-y-3 leading-relaxed"></div>
                 </section>
                 
                 <section class="mt-auto">
@@ -179,57 +276,92 @@
     </div>
 
     <div id="print-layout" class="hidden print:block w-full bg-white text-black font-serif text-sm">
-        <div class="text-center border-b-2 border-black pb-4 mb-6">
-            <h1 class="text-xl font-bold uppercase tracking-widest">Secretaría de Marina - Armada de México</h1>
-            <h2 class="text-lg font-semibold mt-1">Centro de Estudios Superiores Navales (CESNAV)</h2>
-            <h3 class="text-sm mt-1 text-gray-700 font-sans">Dirección General Adjunta de Comunicaciones e Informática (DIRECOMINF)</h3>
-        </div>
+        
+        <img src="./cesnav_bg.jpg" class="watermark" alt="CESNAV Background">
 
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-extrabold uppercase mb-1">Modelo de Evaluación de Probabilidad de Éxito de COA</h2>
-            <p class="font-sans font-semibold text-gray-500 mb-2">(Basado en DAM 1.5 Planeamiento Naval Operacional)</p>
-            <p class="font-sans font-bold text-gray-800">Operación: GOLFO-26 | Curso de Acción: ALFA</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-8 font-sans text-sm border border-black p-4 bg-gray-50">
-            <div><strong>Fecha de Evaluación:</strong> <span id="print-date"></span></div>
-            <div><strong>Especialista Analista:</strong> Irvin (Informática)</div>
-            <div><strong>Estatus Doctrinal:</strong> <span id="print-doctrinal"></span></div>
-            <div><strong>Nivel de Riesgo Residual:</strong> <span id="print-risk"></span></div>
-        </div>
-
-        <div class="mb-8 border border-black p-4">
-            <h3 class="font-bold border-b border-gray-400 pb-1 mb-3 uppercase">Métricas Computadas</h3>
-            <div class="grid grid-cols-3 gap-4 text-center font-sans">
-                <div><p class="text-xs text-gray-600 uppercase">Puntaje MCDA</p><p id="print-mcda" class="text-2xl font-bold">0.0 / 100</p></div>
-                <div><p class="text-xs text-gray-600 uppercase">Wargaming vs ECOA</p><p id="print-wargaming" class="text-2xl font-bold">0.0%</p></div>
-                <div class="bg-gray-200 py-2 rounded"><p class="text-xs text-gray-800 uppercase font-bold">PROBABILIDAD DE ÉXITO</p><p id="print-final-score" class="text-3xl font-extrabold">0.0%</p></div>
+        <div class="print-content-wrapper p-4">
+            <div class="flex justify-between items-center border-b-[3px] border-black pb-4 mb-6">
+                <img src="./logo_marina.png" class="w-48 object-contain" alt="Logo SEMAR">
+                <div class="text-center font-bold text-[11px] uppercase leading-snug tracking-wider">
+                    <p>Secretaría de Marina</p>
+                    <p>Oficialía Mayor de la Secretaría de Marina</p>
+                    <p>Rectoría de la Universidad Naval</p>
+                    <p>Centro de Estudios Superiores Navales</p>
+                    <p class="mt-2 text-sm">Juego de la Guerra</p>
+                </div>
+                <img src="./logo_leona.png" class="w-24 object-contain" alt="Logo Leona Vicario">
             </div>
-        </div>
 
-        <div class="mb-12">
-            <h3 class="font-bold border-b border-gray-400 pb-1 mb-3 uppercase">Dictamen de Estado Mayor</h3>
-            <div id="print-recommendation" class="text-justify leading-relaxed text-sm"></div>
-        </div>
+            <div class="text-center mb-8">
+                <h2 class="text-xl font-extrabold uppercase mb-1 tracking-wide">Modelo de Evaluación de Probabilidad de Éxito del Curso de Acción</h2>
+                <p class="font-sans font-semibold text-gray-700 text-xs">(Basado en el DAM 1.5 Planeamiento Naval Operacional)</p>
+            </div>
 
-        <div class="mt-20 pt-8 flex justify-between text-center font-sans text-xs">
-            <div class="w-64">
-                <div class="border-b border-black mb-2 h-16 relative"><span class="absolute bottom-1 left-0 w-full text-gray-400 italic text-[10px]" id="print-hash"></span></div>
-                <p class="font-bold">Irvin</p><p>Especialista en Informática</p>
+            <div class="mb-6 font-sans text-sm border-2 border-black p-4 bg-white/80 shadow-sm rounded-sm">
+                <div class="grid grid-cols-2 gap-4 border-b border-gray-400 pb-3 mb-3">
+                    <div class="text-lg"><strong>Equipo:</strong> <span id="print-unidad-val" class="text-gray-800">---</span></div>
+                    <div class="text-lg"><strong>COA:</strong> <span id="print-coa-val" class="text-gray-800">---</span></div>
+                </div>
+                <div class="border-b border-gray-400 pb-3 mb-3 text-justify">
+                    <strong class="text-base">Objetivo Final:</strong> <span id="print-mision-val" class="text-gray-800 italic">---</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 border-b border-gray-400 pb-3 mb-3">
+                    <div><strong>Fecha de evaluación:</strong> <span id="print-date"></span></div>
+                    <div><strong>Evaluador:</strong> <span id="print-evaluador-val">---</span></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><strong>Estatus doctrinal:</strong> <span id="print-doctrinal"></span></div>
+                    <div><strong>Nivel de riesgo residual:</strong> <span id="print-risk"></span></div>
+                </div>
             </div>
-            <div class="w-64">
-                <div class="border-b border-black mb-2 h-16"></div>
-                <p class="font-bold">Mando Autorizado</p><p>Firma de Conformidad</p>
+
+            <div class="mb-8 bg-white/80">
+                <h3 class="font-bold text-center border-b-2 border-black pb-2 mb-4 uppercase text-lg tracking-wider">Métricas Computadas</h3>
+                <table class="w-full text-center font-sans border-collapse border-2 border-black">
+                    <thead>
+                        <tr class="bg-gray-200 border-b-2 border-black">
+                            <th class="p-3 border-r-2 border-black text-xs text-gray-800 uppercase w-1/3">Puntaje (MCDA)</th>
+                            <th class="p-3 border-r-2 border-black text-xs text-gray-800 uppercase w-1/3">Wargaming vs ECOA</th>
+                            <th class="p-3 text-xs text-gray-800 uppercase w-1/3">Probabilidad de Éxito</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="p-4 border-r-2 border-black text-2xl font-bold text-gray-800" id="print-mcda">0.0 / 100</td>
+                            <td class="p-4 border-r-2 border-black text-2xl font-bold text-gray-800" id="print-wargaming">0.0%</td>
+                            <td class="p-4 text-3xl font-extrabold bg-gray-100 text-gray-900" id="print-final-score">0.0%</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
+            <div class="mb-12 border-2 border-black p-4 bg-white/80">
+                <h3 class="font-bold border-b border-gray-400 pb-2 mb-4 uppercase text-base">Dictamen de Estado Mayor</h3>
+                <div id="print-recommendation" class="text-justify leading-relaxed text-sm"></div>
+            </div>
+
+            <div class="mt-24 pt-8 flex justify-between text-center font-sans text-xs bg-white/80">
+                <div class="w-64">
+                    <div class="border-b border-black mb-2 h-16 relative"><span class="absolute bottom-1 left-0 w-full text-gray-400 italic text-[9px]" id="print-hash"></span></div>
+                    <p class="font-bold uppercase tracking-wider" id="print-evaluador-firma">---</p>
+                    <p class="text-gray-600">Evaluador Analista</p>
+                </div>
+                <div class="w-64">
+                    <div class="border-b border-black mb-2 h-16"></div>
+                    <p class="font-bold uppercase tracking-wider">Mando Autorizado</p><p class="text-gray-600">Firma de Conformidad</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // Configuración protegida para asegurar renderizado correcto del Chart.js en móviles
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
         const inputs = document.querySelectorAll('.metric-input');
+        const syncInputs = document.querySelectorAll('.sync-input');
+        
         const scoreDisplay = document.getElementById('score-display');
         const scoreBar = document.getElementById('score-bar');
         const scoreTitle = document.getElementById('score-title');
@@ -271,7 +403,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Fundamental para móviles
+                    maintainAspectRatio: false,
                     scales: {
                         r: {
                             angleLines: { color: 'rgba(51, 65, 85, 0.5)' },
@@ -288,38 +420,19 @@
             barChart = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
-                    labels: ['ECOA Probable', 'ECOA Peligroso'], // Textos más cortos para móvil
+                    labels: ['ECOA Probable', 'ECOA Peligroso'],
                     datasets: [
-                        {
-                            label: 'Probabilidad (%)',
-                            data: [0, 0],
-                            backgroundColor: '#475569',
-                            borderRadius: 4,
-                            barPercentage: 0.6
-                        },
-                        {
-                            label: 'Efectividad',
-                            data: [0, 0],
-                            backgroundColor: ['#a855f7', '#ef4444'],
-                            borderRadius: 4,
-                            barPercentage: 0.6
-                        }
+                        { label: 'Probabilidad (%)', data: [0, 0], backgroundColor: '#475569', borderRadius: 4, barPercentage: 0.6 },
+                        { label: 'Efectividad', data: [0, 0], backgroundColor: ['#a855f7', '#ef4444'], borderRadius: 4, barPercentage: 0.6 }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // Fundamental para móviles
+                    responsive: true, maintainAspectRatio: false,
                     scales: {
-                        y: { 
-                            beginAtZero: true, max: 100, 
-                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
-                            ticks: { font: { size: 10 } }
-                        },
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { font: { size: 10 } } },
                         x: { grid: { display: false }, ticks: { font: { size: 9 } } }
                     },
-                    plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }
-                    }
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } }
                 }
             });
         }
@@ -332,7 +445,7 @@
             ];
             radarChart.update();
             barChart.data.datasets[0].data = [data.p_emp_val, data.p_emd_val]; 
-            barChart.data.datasets[1].data = [data.e_emp, data.e_emd];         
+            barChart.data.datasets[1].data = [data.e_emp, data.e_emd];        
             barChart.update();
         }
 
@@ -357,8 +470,8 @@
             recTitle.className = "text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider border-b border-slate-700 pb-2";
 
             let ventajas = [];
-            if (data.mision >= 80) ventajas.push("Cumplimiento táctico asegurado.");
-            if (data.c2 >= 85) ventajas.push("Arquitectura C2 robusta.");
+            if (data.mision >= 80) ventajas.push("Cumplimiento táctico de la misión asegurado.");
+            if (data.c2 >= 85) ventajas.push("Arquitectura C2 y enlace de datos robusto.");
             if (data.logistica >= 80) ventajas.push("Sostenimiento logístico viable.");
 
             let desventajas = [];
@@ -381,10 +494,10 @@
                                finalScore >= 60 ? "<strong>RECOMENDADO CON PRECAUCIÓN</strong>" : "<strong>ALTO RIESGO</strong>";
 
             pdfRecommendationHTML = `
-                <p class="mb-3 print-bg-light p-2 border-l-2 border-black"><strong>Veredicto:</strong> ${veredictoPdf}</p>
-                <div style="column-count: 2; column-gap: 20px;">
-                    <p class="font-bold">Ventajas:</p><ul class="list-disc pl-4 mb-2">${ventajas.map(v=>`<li>${v}</li>`).join('')}</ul>
-                    <p class="font-bold">Mitigaciones:</p><ul class="list-disc pl-4 mb-2">${mitigacion.map(v=>`<li>${v}</li>`).join('')}</ul>
+                <p class="mb-4 text-base bg-gray-100 p-2 border-l-[3px] border-black"><strong>Veredicto:</strong> ${veredictoPdf}</p>
+                <div style="column-count: 2; column-gap: 30px;">
+                    <p class="font-bold underline mb-1">Ventajas:</p><ul class="list-disc pl-5 mb-4">${ventajas.map(v=>`<li class="mb-1">${v}</li>`).join('')}</ul>
+                    <p class="font-bold underline mb-1">Mitigaciones / Desventajas:</p><ul class="list-disc pl-5 mb-4">${mitigacion.concat(desventajas).map(v=>`<li class="mb-1">${v}</li>`).join('')}</ul>
                 </div>
             `;
             
@@ -399,6 +512,16 @@
         }
 
         function calculateEngine() {
+            // Sincronizar Sliders -> Inputs numéricos
+            const sliderIds = ['mision', 'fact_op', 'ecoa_prob_mcda', 'ecoa_pel_mcda', 'riesgo_op', 'riesgo_m', 'logistica', 'flex', 'c2', 'e_emp', 'e_emd', 'probability', 'impact'];
+            sliderIds.forEach(id => { 
+                const numEl = document.getElementById(`num-${id}`);
+                const rangeEl = document.getElementById(id);
+                if(numEl && rangeEl) {
+                    numEl.value = rangeEl.value; 
+                }
+            });
+
             const suitability = Number(document.getElementById('suitability').value);
             const feasibility = Number(document.getElementById('feasibility').value);
             const acceptability = Number(document.getElementById('acceptability').value);
@@ -407,16 +530,8 @@
             const isDoctrinallyValid = (suitability + feasibility + acceptability + distinguishable + completeness) === 5;
             currentDoctrinalLabel = isDoctrinallyValid ? "CUMPLE DOCTRINA" : "INCUMPLE DOCTRINA";
 
-            const sliderIds = ['mision', 'fact_op', 'ecoa_prob_mcda', 'ecoa_pel_mcda', 'riesgo_op', 'riesgo_m', 'logistica', 'flex', 'c2', 'e_emp', 'e_emd', 'probability', 'impact'];
-            sliderIds.forEach(id => { 
-                const el = document.getElementById(`val-${id}`);
-                if(el) el.innerText = document.getElementById(id).value; 
-            });
-
             const p_emp_val = Number(document.getElementById('p_emp').value);
             const p_emd_val = Number(document.getElementById('p_emd').value);
-            document.getElementById('val-p_emp').innerText = p_emp_val + '%';
-            document.getElementById('val-p_emd').innerText = p_emd_val + '%';
 
             let dataObj = {
                 mision: Number(document.getElementById('mision').value),
@@ -512,13 +627,32 @@
         }
 
         function triggerPrint() {
+            // Captura de variables
+            const valUnidad = document.getElementById('input-unidad').value || "1";
+            const valCoa = document.getElementById('input-coa').value || "1";
+            const valMision = document.getElementById('input-mision').value || "Red vs Blue";
+            
+            // Nuevo: Capturar Evaluador
+            const valEvaluador = document.getElementById('input-evaluador').value || "NO ESPECIFICADO";
+
+            // Asignación a PDF
+            document.getElementById('print-unidad-val').innerText = valUnidad;
+            document.getElementById('print-coa-val').innerText = valCoa;
+            document.getElementById('print-mision-val').innerText = valMision;
+            
+            // Asignar al PDF (Campos de Evaluador)
+            document.getElementById('print-evaluador-val').innerText = valEvaluador;
+            document.getElementById('print-evaluador-firma').innerText = valEvaluador;
+
             document.getElementById('print-date').innerText = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('print-hash').innerText = "Sello Digital: " + Math.random().toString(36).substring(2, 15).toUpperCase();
             document.getElementById('print-doctrinal').innerText = currentDoctrinalLabel;
             document.getElementById('print-risk').innerText = currentRiskLabel;
+            
             document.getElementById('print-mcda').innerText = currentMcdaScore !== "N/A" ? currentMcdaScore + " / 100" : "N/A";
             document.getElementById('print-wargaming').innerText = currentWargamingScore !== "N/A" ? currentWargamingScore + "%" : "N/A";
             document.getElementById('print-final-score').innerText = currentFinalScore !== "N/A" ? currentFinalScore + "%" : currentStatus;
+            
             document.getElementById('print-recommendation').innerHTML = pdfRecommendationHTML;
 
             let finalEl = document.getElementById('print-final-score');
@@ -530,20 +664,29 @@
             window.print();
         }
 
-        // Retraso de renderizado para evitar errores de redimensionamiento en móviles
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 initCharts();
+                
+                // Eventos para los Sliders (Rango)
                 inputs.forEach(input => {
-                    // Soporte ampliado para eventos táctiles y de ratón
                     input.addEventListener('input', calculateEngine);
                     input.addEventListener('change', calculateEngine); 
                 });
+
+                // Sincronización Inversa: Inputs numéricos -> Sliders
+                syncInputs.forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        const targetId = e.target.getAttribute('data-target');
+                        document.getElementById(targetId).value = e.target.value;
+                        calculateEngine(); // Recalcular todo al escribir
+                    });
+                });
+
                 calculateEngine();
             }, 100);
         });
 
-        // Recalcular gráfico en rotación de pantalla móvil
         window.addEventListener('resize', () => {
             if(radarChart) radarChart.resize();
             if(barChart) barChart.resize();
