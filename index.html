@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Modelo de Evaluación de probabilidad de éxito de COA</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Compatibilidad Cross-Browser para impresión */
+        @media print {
+            @page { margin: 20mm; size: letter; }
+            body { 
+                background-color: white !important; 
+                -webkit-print-color-adjust: exact; /* Chrome/Safari */
+                print-color-adjust: exact; /* Estándar moderno */
+                color-adjust: exact; /* Firefox antiguo */
+            }
+            .print-bg-light { background-color: #f3f4f6 !important; color: black !important; }
+            .print-text-dark { color: black !important; }
+            .print\:hidden { display: none !important; }
+        }
+
+        /* Compatibilidad Cross-Browser para Scrollbars */
+        /* Estándar (Firefox) */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #334155 #0f172a;
+        }
+        /* WebKit (Chrome, Edge, Safari) */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        
+        /* Ajuste para inputs de rango (Sliders) en distintos navegadores */
+        input[type=range] {
+            -webkit-appearance: none; /* Elimina estilos por defecto de Safari/Chrome */
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            background: #334155;
+            border-radius: 4px;
+            height: 6px;
+        }
+        input[type=range]::-moz-range-track {
+            background: #334155;
+            border-radius: 4px;
+            height: 6px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 font-sans text-slate-200 min-h-screen relative overflow-x-hidden">
+    
+    <div id="main-dashboard" class="p-4 md:p-8 max-w-[1400px] mx-auto print:hidden">
+        <header class="mb-6 md:mb-8 border-b border-slate-700 pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-slate-100 tracking-tight leading-tight">
+                    Modelo de Evaluación de probabilidad de éxito de COA <span class="text-blue-500 text-lg md:text-xl font-bold align-top ml-1">v2.0</span>
+                </h1>
+                <p class="text-slate-400 text-xs md:text-sm mt-1 font-semibold tracking-wide">(Basado en DAM 1.5 Planeamiento Naval Operacional)</p>
+            </div>
+            <div class="text-left md:text-right w-full md:w-auto">
+                <span class="inline-block bg-blue-900/50 text-blue-300 py-1 px-3 rounded text-xs font-mono border border-blue-800 break-words">
+                    OP-ACTIVA: GOLFO-26 // COA: ALFA
+                </span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
+            
+            <div class="xl:col-span-5 space-y-6">
+                <section class="bg-slate-900 border border-slate-800 rounded-lg p-4 md:p-5 relative shadow-lg overflow-hidden">
+                    <h2 class="text-base md:text-lg font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2 flex justify-between items-center">
+                        <span>Filtro 1: Validación Doctrinal</span>
+                        <span id="gateway1-badge" class="text-xs px-2 py-1 rounded font-bold bg-emerald-900 text-emerald-200">VÁLIDO</span>
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Adecuado</label><select id="suitability" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Factible</label><select id="feasibility" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Aceptable</label><select id="acceptability" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Diferenciable</label><select id="distinguishable" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Completo</label><select id="completeness" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 md:p-1 metric-input focus:outline-none focus:border-blue-500"><option value="1">Cumple</option><option value="0">No cumple</option></select></div>
+                    </div>
+                </section>
+
+                <section id="panel-capa2" class="bg-slate-900 border border-slate-800 rounded-lg p-4 md:p-5 transition-opacity duration-300 shadow-lg">
+                    <h2 class="text-base md:text-lg font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2 flex justify-between items-center">
+                        <span>Filtro 2: Matriz Multicriterio</span>
+                        <div class="flex items-center gap-2 md:gap-3">
+                            <span class="text-[10px] md:text-xs text-slate-400">PUNTAJE: <span id="c2-score-display" class="font-mono text-white text-sm">0</span>/100</span>
+                            <span id="gateway2-badge" class="text-[10px] md:text-xs px-2 py-1 rounded font-bold bg-emerald-900 text-emerald-200">AVANZA</span>
+                        </div>
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Misión (20%)</span> <span id="val-mision">85</span></label><input type="range" id="mision" min="0" max="100" value="85" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Factibilidad Op. (15%)</span> <span id="val-fact_op">80</span></label><input type="range" id="fact_op" min="0" max="100" value="80" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>ECOA Probable (10%)</span> <span id="val-ecoa_prob_mcda">75</span></label><input type="range" id="ecoa_prob_mcda" min="0" max="100" value="75" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>ECOA Peligroso (10%)</span> <span id="val-ecoa_pel_mcda">65</span></label><input type="range" id="ecoa_pel_mcda" min="0" max="100" value="65" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Riesgo Operacional (10%)</span> <span id="val-riesgo_op">80</span></label><input type="range" id="riesgo_op" min="0" max="100" value="80" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Riesgo de Misión (10%)</span> <span id="val-riesgo_m">85</span></label><input type="range" id="riesgo_m" min="0" max="100" value="85" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Logística (10%)</span> <span id="val-logistica">70</span></label><input type="range" id="logistica" min="0" max="100" value="70" class="w-full accent-indigo-500 metric-input"></div>
+                        <div><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>Flexibilidad (5%)</span> <span id="val-flex">75</span></label><input type="range" id="flex" min="0" max="100" value="75" class="w-full accent-indigo-500 metric-input"></div>
+                        <div class="sm:col-span-2"><label class="block text-[11px] uppercase text-slate-400 mb-1 flex justify-between"><span>C2 / Interoperabilidad (10%)</span> <span id="val-c2">90</span></label><input type="range" id="c2" min="0" max="100" value="90" class="w-full accent-indigo-500 metric-input"></div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800 relative w-full flex justify-center" style="height: 220px;">
+                        <canvas id="mcdaRadarChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <div id="panel-capa34" class="xl:col-span-4 space-y-6 transition-opacity duration-300">
+                <section class="bg-slate-900 border border-slate-800 rounded-lg p-4 md:p-5 shadow-lg">
+                    <h2 class="text-sm font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2 flex justify-between items-center">
+                        <span>Filtro 3: Wargaming vs ECOA</span>
+                        <span class="text-xs text-slate-400">PE: <span id="wargaming-score" class="font-mono text-purple-400">0.0</span>%</span>
+                    </h2>
+                    
+                    <div class="mb-4 p-3 bg-slate-800/50 rounded border border-slate-700 space-y-3">
+                        <h3 class="text-[10px] font-bold text-purple-400 uppercase border-b border-slate-700 pb-1 mb-2 tracking-wider">ECOA Más Probable</h3>
+                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Probabilidad (P_EMP)</span> <span id="val-p_emp" class="font-bold text-purple-400">65%</span></label><input type="range" id="p_emp" min="0" max="100" value="65" class="w-full accent-purple-500 metric-input"></div>
+                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Efectividad (E_EMP)</span> <span id="val-e_emp" class="font-bold text-purple-400">80</span></label><input type="range" id="e_emp" min="0" max="100" value="80" class="w-full accent-purple-500 metric-input"></div>
+                    </div>
+                    <div class="p-3 bg-slate-800/50 rounded border border-slate-700 space-y-3 mb-4">
+                        <h3 class="text-[10px] font-bold text-red-400 uppercase border-b border-slate-700 pb-1 mb-2 tracking-wider">ECOA Más Peligroso</h3>
+                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Probabilidad (P_EMD)</span> <span id="val-p_emd" class="font-bold text-red-400">35%</span></label><input type="range" id="p_emd" min="0" max="100" value="35" class="w-full accent-red-500 metric-input"></div>
+                        <div><label class="block text-[9px] uppercase text-slate-300 mb-1 flex justify-between"><span>Efectividad (E_EMD)</span> <span id="val-e_emd" class="font-bold text-red-400">55</span></label><input type="range" id="e_emd" min="0" max="100" value="55" class="w-full accent-red-500 metric-input"></div>
+                    </div>
+
+                    <div class="w-full relative" style="height: 180px;">
+                        <canvas id="wargamingBarChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="bg-slate-900 border border-slate-800 rounded-lg p-4 md:p-5 shadow-lg">
+                    <h2 class="text-sm font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2 flex justify-between items-center">
+                        <span>Filtro 4: Riesgo Residual</span>
+                        <span id="risk-badge" class="text-[10px] px-2 py-1 rounded font-bold bg-orange-900 text-orange-200">ALTO</span>
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1 flex justify-between"><span>Prob. (1-5)</span> <span id="val-probability">3</span></label><input type="range" id="probability" min="1" max="5" step="1" value="3" class="w-full accent-amber-500 metric-input"></div>
+                        <div><label class="block text-[10px] uppercase text-slate-400 mb-1 flex justify-between"><span>Impacto (1-5)</span> <span id="val-impact">4</span></label><input type="range" id="impact" min="1" max="5" step="1" value="4" class="w-full accent-amber-500 metric-input"></div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="xl:col-span-3 space-y-6 flex flex-col h-full">
+                
+                <section class="bg-slate-900 border border-slate-700 rounded-lg p-6 flex flex-col items-center justify-center shadow-lg relative overflow-hidden">
+                    <h2 id="score-title" class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4 text-center">Probabilidad Estimada<br>de Éxito</h2>
+                    <div id="score-display" class="text-5xl md:text-6xl font-bold font-mono tracking-tighter text-yellow-500 drop-shadow-md text-center relative z-10">
+                        --<span class="text-2xl md:text-3xl">%</span>
+                    </div>
+                    <div class="absolute w-32 h-32 rounded-full border-4 border-slate-800 opacity-50 z-0"></div>
+                    
+                    <div class="w-full bg-slate-800 rounded-full h-2 mt-6 z-10">
+                        <div id="score-bar" class="h-2 rounded-full bg-yellow-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </section>
+
+                <section id="panel-recomendacion" class="bg-slate-800 border-l-4 border-blue-500 rounded-r-lg p-4 md:p-5 shadow-lg transition-all duration-300 flex-grow">
+                    <h3 id="rec-title" class="text-xs font-bold text-white mb-3 uppercase tracking-wider border-b border-slate-700 pb-2">Dictamen de Mando</h3>
+                    <div id="rec-content" class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                        </div>
+                </section>
+                
+                <section class="mt-auto">
+                    <button id="approve-btn" onclick="triggerPrint()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors shadow-lg flex items-center justify-center gap-2 cursor-pointer touch-manipulation">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        Generar PDF Oficial
+                    </button>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-layout" class="hidden print:block w-full bg-white text-black font-serif text-sm">
+        <div class="text-center border-b-2 border-black pb-4 mb-6">
+            <h1 class="text-xl font-bold uppercase tracking-widest">Secretaría de Marina - Armada de México</h1>
+            <h2 class="text-lg font-semibold mt-1">Centro de Estudios Superiores Navales (CESNAV)</h2>
+            <h3 class="text-sm mt-1 text-gray-700 font-sans">Dirección General Adjunta de Comunicaciones e Informática (DIRECOMINF)</h3>
+        </div>
+
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-extrabold uppercase mb-1">Modelo de Evaluación de Probabilidad de Éxito de COA</h2>
+            <p class="font-sans font-semibold text-gray-500 mb-2">(Basado en DAM 1.5 Planeamiento Naval Operacional)</p>
+            <p class="font-sans font-bold text-gray-800">Operación: GOLFO-26 | Curso de Acción: ALFA</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-8 font-sans text-sm border border-black p-4 bg-gray-50">
+            <div><strong>Fecha de Evaluación:</strong> <span id="print-date"></span></div>
+            <div><strong>Especialista Analista:</strong> Irvin (Informática)</div>
+            <div><strong>Estatus Doctrinal:</strong> <span id="print-doctrinal"></span></div>
+            <div><strong>Nivel de Riesgo Residual:</strong> <span id="print-risk"></span></div>
+        </div>
+
+        <div class="mb-8 border border-black p-4">
+            <h3 class="font-bold border-b border-gray-400 pb-1 mb-3 uppercase">Métricas Computadas</h3>
+            <div class="grid grid-cols-3 gap-4 text-center font-sans">
+                <div><p class="text-xs text-gray-600 uppercase">Puntaje MCDA</p><p id="print-mcda" class="text-2xl font-bold">0.0 / 100</p></div>
+                <div><p class="text-xs text-gray-600 uppercase">Wargaming vs ECOA</p><p id="print-wargaming" class="text-2xl font-bold">0.0%</p></div>
+                <div class="bg-gray-200 py-2 rounded"><p class="text-xs text-gray-800 uppercase font-bold">PROBABILIDAD DE ÉXITO</p><p id="print-final-score" class="text-3xl font-extrabold">0.0%</p></div>
+            </div>
+        </div>
+
+        <div class="mb-12">
+            <h3 class="font-bold border-b border-gray-400 pb-1 mb-3 uppercase">Dictamen de Estado Mayor</h3>
+            <div id="print-recommendation" class="text-justify leading-relaxed text-sm"></div>
+        </div>
+
+        <div class="mt-20 pt-8 flex justify-between text-center font-sans text-xs">
+            <div class="w-64">
+                <div class="border-b border-black mb-2 h-16 relative"><span class="absolute bottom-1 left-0 w-full text-gray-400 italic text-[10px]" id="print-hash"></span></div>
+                <p class="font-bold">Irvin</p><p>Especialista en Informática</p>
+            </div>
+            <div class="w-64">
+                <div class="border-b border-black mb-2 h-16"></div>
+                <p class="font-bold">Mando Autorizado</p><p>Firma de Conformidad</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración protegida para asegurar renderizado correcto del Chart.js en móviles
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+        const inputs = document.querySelectorAll('.metric-input');
+        const scoreDisplay = document.getElementById('score-display');
+        const scoreBar = document.getElementById('score-bar');
+        const scoreTitle = document.getElementById('score-title');
+        
+        const gateway1Badge = document.getElementById('gateway1-badge');
+        const gateway2Badge = document.getElementById('gateway2-badge');
+        const riskBadge = document.getElementById('risk-badge');
+        const wargamingScoreDisplay = document.getElementById('wargaming-score');
+        
+        const panelCapa2 = document.getElementById('panel-capa2');
+        const panelCapa34 = document.getElementById('panel-capa34');
+        const approveBtn = document.getElementById('approve-btn');
+        const c2ScoreDisplay = document.getElementById('c2-score-display');
+        const recTitle = document.getElementById('rec-title');
+        const recContent = document.getElementById('rec-content');
+
+        let currentStatus = "APROBADO", currentFinalScore = "0", currentMcdaScore = "0", currentWargamingScore = "0";
+        let currentRiskLabel = "BAJO", currentDoctrinalLabel = "CUMPLE", pdfRecommendationHTML = "";
+
+        let radarChart, barChart;
+
+        function initCharts() {
+            const ctxRadar = document.getElementById('mcdaRadarChart').getContext('2d');
+            radarChart = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['Misión', 'Fact. Op.', 'ECOA Prob', 'ECOA Pel.', 'Riesgo Op.', 'Riesgo Mis.', 'Logística', 'Flexibilidad', 'C2'],
+                    datasets: [{
+                        label: 'Evaluación del COA',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: '#6366f1',
+                        pointBackgroundColor: '#818cf8',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#6366f1',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Fundamental para móviles
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(51, 65, 85, 0.5)' },
+                            grid: { color: 'rgba(51, 65, 85, 0.5)' },
+                            pointLabels: { color: '#cbd5e1', font: { size: window.innerWidth < 640 ? 8 : 9 } },
+                            ticks: { display: false, min: 0, max: 100 }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const ctxBar = document.getElementById('wargamingBarChart').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['ECOA Probable', 'ECOA Peligroso'], // Textos más cortos para móvil
+                    datasets: [
+                        {
+                            label: 'Probabilidad (%)',
+                            data: [0, 0],
+                            backgroundColor: '#475569',
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Efectividad',
+                            data: [0, 0],
+                            backgroundColor: ['#a855f7', '#ef4444'],
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Fundamental para móviles
+                    scales: {
+                        y: { 
+                            beginAtZero: true, max: 100, 
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { font: { size: 10 } }
+                        },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(data) {
+            if (!radarChart || !barChart) return;
+            radarChart.data.datasets[0].data = [
+                data.mision, data.fact_op, data.ecoa_prob_mcda, data.ecoa_pel_mcda, 
+                data.riesgo_op, data.riesgo_m, data.logistica, data.flex, data.c2
+            ];
+            radarChart.update();
+            barChart.data.datasets[0].data = [data.p_emp_val, data.p_emd_val]; 
+            barChart.data.datasets[1].data = [data.e_emp, data.e_emd];         
+            barChart.update();
+        }
+
+        function generateRecommendation(isDoctrinallyValid, mcdaScore, finalScore, data) {
+            if (!isDoctrinallyValid) {
+                recTitle.innerText = "❌ RECHAZO DOCTRINAL";
+                recTitle.className = "text-xs font-bold text-red-400 mb-3 uppercase tracking-wider border-b border-red-900 pb-2";
+                let msg = "Este COA <strong>NO CUMPLE</strong> con la doctrina naval. Se descarta su evaluación numérica.";
+                pdfRecommendationHTML = `<p class='print-text-dark'>${msg}</p>`;
+                return `<p class='text-slate-300'>${msg}</p>`;
+            }
+
+            if (mcdaScore < 70) {
+                recTitle.innerText = "⚠️ RECHAZO MULTICRITERIO";
+                recTitle.className = "text-xs font-bold text-orange-400 mb-3 uppercase tracking-wider border-b border-orange-900 pb-2";
+                let msg = "El COA es válido en doctrina, pero matemáticamente deficiente (MCDA < 70).";
+                pdfRecommendationHTML = `<p class='print-text-dark'>${msg}</p>`;
+                return `<p class='text-slate-300'>${msg}</p>`;
+            }
+
+            recTitle.innerText = "Dictamen Analítico de Mando";
+            recTitle.className = "text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider border-b border-slate-700 pb-2";
+
+            let ventajas = [];
+            if (data.mision >= 80) ventajas.push("Cumplimiento táctico asegurado.");
+            if (data.c2 >= 85) ventajas.push("Arquitectura C2 robusta.");
+            if (data.logistica >= 80) ventajas.push("Sostenimiento logístico viable.");
+
+            let desventajas = [];
+            if (data.e_emd <= 60) desventajas.push("Vulnerabilidad severa ante ECOA peligroso.");
+            if (data.riesgo_op <= 70) desventajas.push("Riesgo operacional elevado.");
+
+            let mitigacion = [];
+            if (data.riskScore >= 12) mitigacion.push("Asignar Fuerza de Reserva inmediata.");
+            if (data.e_emd <= 60) mitigacion.push("Desplegar unidades ISR avanzadas.");
+            if (mitigacion.length === 0) mitigacion.push("Mantener matriz de Inteligencia.");
+
+            if (ventajas.length===0) ventajas.push("Operatividad estándar.");
+            if (desventajas.length===0) desventajas.push("Parámetros dentro de lo aceptable.");
+
+            let veredicto = finalScore >= 75 ? "<span class='text-emerald-400 font-bold'>ALTAMENTE RECOMENDADO</span>" :
+                            finalScore >= 60 ? "<span class='text-yellow-400 font-bold'>PRECAUCIÓN</span>" :
+                            "<span class='text-orange-400 font-bold'>ALTO RIESGO</span>";
+
+            let veredictoPdf = finalScore >= 75 ? "<strong>ALTAMENTE RECOMENDADO</strong>" :
+                               finalScore >= 60 ? "<strong>RECOMENDADO CON PRECAUCIÓN</strong>" : "<strong>ALTO RIESGO</strong>";
+
+            pdfRecommendationHTML = `
+                <p class="mb-3 print-bg-light p-2 border-l-2 border-black"><strong>Veredicto:</strong> ${veredictoPdf}</p>
+                <div style="column-count: 2; column-gap: 20px;">
+                    <p class="font-bold">Ventajas:</p><ul class="list-disc pl-4 mb-2">${ventajas.map(v=>`<li>${v}</li>`).join('')}</ul>
+                    <p class="font-bold">Mitigaciones:</p><ul class="list-disc pl-4 mb-2">${mitigacion.map(v=>`<li>${v}</li>`).join('')}</ul>
+                </div>
+            `;
+            
+            return `
+                <p class="mb-3 bg-slate-900 p-2 border-l-2 border-blue-500 rounded text-slate-200 shadow-md"><strong>Veredicto:</strong> ${veredicto}</p>
+                <div class="grid grid-cols-1 gap-2">
+                    <div><p class="text-[10px] font-bold text-emerald-400 uppercase">Ventajas</p><ul class="list-disc pl-4 text-slate-300 text-[11px]">${ventajas.map(v=>`<li>${v}</li>`).join('')}</ul></div>
+                    <div><p class="text-[10px] font-bold text-red-400 uppercase">Riesgos</p><ul class="list-disc pl-4 text-slate-300 text-[11px]">${desventajas.map(v=>`<li>${v}</li>`).join('')}</ul></div>
+                    <div><p class="text-[10px] font-bold text-blue-400 uppercase">Mitigación</p><ul class="list-disc pl-4 text-slate-300 text-[11px]">${mitigacion.map(v=>`<li>${v}</li>`).join('')}</ul></div>
+                </div>
+            `;
+        }
+
+        function calculateEngine() {
+            const suitability = Number(document.getElementById('suitability').value);
+            const feasibility = Number(document.getElementById('feasibility').value);
+            const acceptability = Number(document.getElementById('acceptability').value);
+            const distinguishable = Number(document.getElementById('distinguishable').value);
+            const completeness = Number(document.getElementById('completeness').value);
+            const isDoctrinallyValid = (suitability + feasibility + acceptability + distinguishable + completeness) === 5;
+            currentDoctrinalLabel = isDoctrinallyValid ? "CUMPLE DOCTRINA" : "INCUMPLE DOCTRINA";
+
+            const sliderIds = ['mision', 'fact_op', 'ecoa_prob_mcda', 'ecoa_pel_mcda', 'riesgo_op', 'riesgo_m', 'logistica', 'flex', 'c2', 'e_emp', 'e_emd', 'probability', 'impact'];
+            sliderIds.forEach(id => { 
+                const el = document.getElementById(`val-${id}`);
+                if(el) el.innerText = document.getElementById(id).value; 
+            });
+
+            const p_emp_val = Number(document.getElementById('p_emp').value);
+            const p_emd_val = Number(document.getElementById('p_emd').value);
+            document.getElementById('val-p_emp').innerText = p_emp_val + '%';
+            document.getElementById('val-p_emd').innerText = p_emd_val + '%';
+
+            let dataObj = {
+                mision: Number(document.getElementById('mision').value),
+                fact_op: Number(document.getElementById('fact_op').value),
+                ecoa_prob_mcda: Number(document.getElementById('ecoa_prob_mcda').value),
+                ecoa_pel_mcda: Number(document.getElementById('ecoa_pel_mcda').value),
+                riesgo_op: Number(document.getElementById('riesgo_op').value),
+                riesgo_m: Number(document.getElementById('riesgo_m').value),
+                logistica: Number(document.getElementById('logistica').value),
+                flex: Number(document.getElementById('flex').value),
+                c2: Number(document.getElementById('c2').value),
+                e_emp: Number(document.getElementById('e_emp').value),
+                e_emd: Number(document.getElementById('e_emd').value),
+                p_emp_val: p_emp_val,
+                p_emd_val: p_emd_val,
+                riskScore: Number(document.getElementById('probability').value) * Number(document.getElementById('impact').value)
+            };
+
+            updateCharts(dataObj);
+
+            if (!isDoctrinallyValid) {
+                gateway1Badge.innerText = 'RECHAZADO'; gateway1Badge.className = 'text-[10px] md:text-xs px-2 py-1 rounded font-bold bg-red-900 text-red-200';
+                panelCapa2.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
+                panelCapa34.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
+                scoreTitle.innerText = "ESTADO DEL COA";
+                scoreDisplay.innerHTML = `<span class="text-xl md:text-3xl">FALLA DOCTRINAL</span>`;
+                scoreDisplay.className = `font-bold font-mono tracking-tighter text-red-500 drop-shadow-md text-center relative z-10`;
+                scoreBar.style.width = `100%`; scoreBar.className = `h-2 rounded-full bg-red-600 transition-all duration-500`;
+                approveBtn.className = "w-full bg-red-800 hover:bg-red-700 text-white py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors shadow-lg flex items-center justify-center gap-2 cursor-pointer";
+                approveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> Generar Reporte`;
+                
+                currentStatus = "RECHAZADO"; currentFinalScore = "N/A"; currentMcdaScore = "N/A"; currentWargamingScore = "N/A";
+                recContent.innerHTML = generateRecommendation(false, 0, 0, dataObj);
+                return;
+            }
+
+            gateway1Badge.innerText = 'VÁLIDO'; gateway1Badge.className = 'text-[10px] md:text-xs px-2 py-1 rounded font-bold bg-emerald-900 text-emerald-200';
+            panelCapa2.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+
+            const mcdaScore = (dataObj.mision * 0.20) + (dataObj.fact_op * 0.15) + (dataObj.ecoa_prob_mcda * 0.10) + (dataObj.ecoa_pel_mcda * 0.10) + 
+                              (dataObj.riesgo_op * 0.10) + (dataObj.riesgo_m * 0.10) + (dataObj.logistica * 0.10) + 
+                              (dataObj.flex * 0.05) + (dataObj.c2 * 0.10);
+
+            c2ScoreDisplay.innerText = mcdaScore.toFixed(1);
+            currentMcdaScore = mcdaScore.toFixed(1);
+
+            if (mcdaScore < 70) {
+                gateway2Badge.innerText = 'INSUFICIENTE'; gateway2Badge.className = 'text-[10px] md:text-xs px-2 py-1 rounded font-bold bg-red-900 text-red-200';
+                panelCapa34.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
+                scoreTitle.innerText = "ESTADO DEL COA";
+                scoreDisplay.innerHTML = `<span class="text-xl md:text-3xl">RECHAZO FASE 2</span>`;
+                scoreDisplay.className = `font-bold font-mono tracking-tighter text-red-500 drop-shadow-md text-center relative z-10`;
+                scoreBar.style.width = `${mcdaScore}%`; scoreBar.className = `h-2 rounded-full bg-red-600 transition-all duration-500`;
+                approveBtn.className = "w-full bg-red-800 hover:bg-red-700 text-white py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors shadow-lg flex items-center justify-center gap-2 cursor-pointer";
+                approveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> Generar Reporte`;
+                
+                currentStatus = "RECHAZADO"; currentFinalScore = "N/A"; currentWargamingScore = "N/A";
+                recContent.innerHTML = generateRecommendation(true, mcdaScore, 0, dataObj);
+                return;
+            }
+
+            gateway2Badge.innerText = 'AVANZA'; gateway2Badge.className = 'text-[10px] md:text-xs px-2 py-1 rounded font-bold bg-emerald-900 text-emerald-200';
+            panelCapa34.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+            approveBtn.className = "w-full bg-emerald-700 hover:bg-emerald-600 text-white py-3 rounded text-sm font-bold uppercase tracking-wider transition-colors shadow-lg flex items-center justify-center gap-2 cursor-pointer touch-manipulation";
+            approveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg> Generar PDF Oficial`;
+
+            const peCoaScore = ((p_emp_val / 100) * dataObj.e_emp) + ((p_emd_val / 100) * dataObj.e_emd);
+            wargamingScoreDisplay.innerText = peCoaScore.toFixed(2);
+            currentWargamingScore = peCoaScore.toFixed(2);
+
+            const riskFactor = 100 - (dataObj.riskScore * 4); 
+            if (dataObj.riskScore <= 4) { riskBadge.innerText = 'BAJO'; currentRiskLabel = 'BAJO'; riskBadge.className = 'text-[10px] px-2 py-1 rounded font-bold bg-slate-800 text-slate-300'; }
+            else if (dataObj.riskScore <= 9) { riskBadge.innerText = 'MODERADO'; currentRiskLabel = 'MODERADO'; riskBadge.className = 'text-[10px] px-2 py-1 rounded font-bold bg-slate-800 text-slate-300'; }
+            else if (dataObj.riskScore <= 16) { riskBadge.innerText = 'ALTO'; currentRiskLabel = 'ALTO'; riskBadge.className = 'text-[10px] px-2 py-1 rounded font-bold bg-orange-900 text-orange-200'; }
+            else { riskBadge.innerText = 'CRÍTICO'; currentRiskLabel = 'CRÍTICO'; riskBadge.className = 'text-[10px] px-2 py-1 rounded font-bold bg-red-900 text-red-200'; }
+
+            let finalScore = (0.50 * mcdaScore) + (0.30 * peCoaScore) + (0.20 * riskFactor);
+            finalScore = Math.max(0, Math.min(100, finalScore));
+            currentFinalScore = finalScore.toFixed(1);
+            currentStatus = finalScore >= 60 ? "AUTORIZABLE" : "NO RECOMENDADO";
+
+            scoreTitle.innerHTML = "Probabilidad Estimada<br>de Éxito";
+            scoreDisplay.innerHTML = `${currentFinalScore}<span class="text-2xl md:text-3xl">%</span>`;
+            scoreBar.style.width = `${currentFinalScore}%`;
+
+            let colorClass = finalScore < 60 ? 'text-orange-500' : finalScore < 75 ? 'text-yellow-500' : 'text-emerald-500';
+            let bgClass = finalScore < 60 ? 'bg-orange-500' : finalScore < 75 ? 'bg-yellow-500' : 'bg-emerald-500';
+
+            scoreDisplay.className = `text-5xl md:text-6xl font-bold font-mono tracking-tighter drop-shadow-md text-center relative z-10 ${colorClass}`;
+            scoreBar.className = `h-2 rounded-full transition-all duration-500 ${bgClass}`;
+
+            recContent.innerHTML = generateRecommendation(true, mcdaScore, finalScore, dataObj);
+        }
+
+        function triggerPrint() {
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('print-hash').innerText = "Sello Digital: " + Math.random().toString(36).substring(2, 15).toUpperCase();
+            document.getElementById('print-doctrinal').innerText = currentDoctrinalLabel;
+            document.getElementById('print-risk').innerText = currentRiskLabel;
+            document.getElementById('print-mcda').innerText = currentMcdaScore !== "N/A" ? currentMcdaScore + " / 100" : "N/A";
+            document.getElementById('print-wargaming').innerText = currentWargamingScore !== "N/A" ? currentWargamingScore + "%" : "N/A";
+            document.getElementById('print-final-score').innerText = currentFinalScore !== "N/A" ? currentFinalScore + "%" : currentStatus;
+            document.getElementById('print-recommendation').innerHTML = pdfRecommendationHTML;
+
+            let finalEl = document.getElementById('print-final-score');
+            if(currentStatus === "RECHAZADO" || currentStatus === "NO RECOMENDADO") {
+                finalEl.style.color = "red";
+                document.getElementById('print-doctrinal').style.color = currentDoctrinalLabel === "INCUMPLE DOCTRINA" ? "red" : "black";
+            } else { finalEl.style.color = "green"; }
+
+            window.print();
+        }
+
+        // Retraso de renderizado para evitar errores de redimensionamiento en móviles
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                initCharts();
+                inputs.forEach(input => {
+                    // Soporte ampliado para eventos táctiles y de ratón
+                    input.addEventListener('input', calculateEngine);
+                    input.addEventListener('change', calculateEngine); 
+                });
+                calculateEngine();
+            }, 100);
+        });
+
+        // Recalcular gráfico en rotación de pantalla móvil
+        window.addEventListener('resize', () => {
+            if(radarChart) radarChart.resize();
+            if(barChart) barChart.resize();
+        });
+    </script>
+</body>
+</html>
